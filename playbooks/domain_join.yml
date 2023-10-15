@@ -3,7 +3,7 @@
 # Ansible connection should use local credentials if possible.
 # If a reboot is required, the second task will trigger one and wait until the host is available.
 ---
-- hosts: all
+- hosts: windows
   gather_facts: false
   tasks:
     - ansible.windows.win_domain_membership:
