@@ -18,7 +18,7 @@
 
     # Install the Rapid7 Agent if it isn't already installed
     - name: install-rapid7 | Install the Rapid7 Agent
-      win_command: "msiexec /i C:\\tmp\\agentInstaller-x86.msi /l*v insight_agent_install_log.log CUSTOMTOKEN='{{ token }}'"
+      win_command: "msiexec /i C:\\tmp\\agentInstaller-x86_64.msi /l*v insight_agent_install_log.log CUSTOMTOKEN='{{ token }}'"
       when:
         - Rapid7ServiceResult['exists'] == false
       register: Rapid7Install
