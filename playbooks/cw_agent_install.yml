@@ -34,19 +34,90 @@
       when:
         - CloudWatchServiceResultAfterInstall['exists'] == false
 
-    # # If you need to provide a configuration json, you would typically copy it over to the target system
-    # # and then run the necessary command to load that configuration. Here's an example assuming you
-    # # have a configuration file named 'cloudwatch-config.json' on your Ansible controller:
-    # - name: Copy CloudWatch configuration file
-    #   win_copy:
-    #     src: cloudwatch-config.json
-    #     dest: C:\path\to\dest\on\windows\system\cloudwatch-config.json
+    - name: Copy CloudWatch configuration file
+      win_copy:
+        content: |
+          [agent]
+            collection_jitter = "0s"
+            debug = false
+            flush_interval = "1s"
+            flush_jitter = "0s"
+            hostname = ""
+            interval = "60s"
+            logfile = "C:\\ProgramData\\Amazon\\AmazonCloudWatchAgent\\Logs\\amazon-cloudwatch-agent.log"
+            logtarget = "lumberjack"
+            metric_batch_size = 1000
+            metric_buffer_limit = 10000
+            omit_hostname = false
+            precision = ""
+            quiet = false
+            round_interval = false
 
-    # # Then you would load that configuration using whatever command AWS CloudWatch Agent expects:
-    # # For example:
-    # - name: Load CloudWatch configuration
-    #   win_shell: |
-    #     "C:\path\to\cloudwatch\agent\binary" -load-config "C:\path\to\dest\on\windows\system\cloudwatch-config.json"
+            [inputs]
+
+              [[inputs.win_perf_counters]]
+                DisableReplacer = true
+
+                [[inputs.win_perf_counters.object]]
+                  Counters = ["% Free Space"]
+                  Instances = ["*"]
+                  Measurement = "LogicalDisk"
+                  ObjectName = "LogicalDisk"
+                  WarnOnMissing = true
+
+                [[inputs.win_perf_counters.object]]
+                  Counters = ["% Committed Bytes In Use"]
+                  Instances = ["------"]
+                  Measurement = "Memory"
+                  ObjectName = "Memory"
+                  WarnOnMissing = true
+                [inputs.win_perf_counters.tags]
+                  metricPath = "metrics"
+
+                [[inputs.win_perf_counters.object]]
+                  Counters = ["% Usage"]
+                  Instances = ["*"]
+                  Measurement = "Paging File"
+                  ObjectName = "Paging File"
+                  WarnOnMissing = true
+
+              [[inputs.win_perf_counters.object]]
+                  Counters = ["% Disk Time"]
+                  Instances = ["*"]
+                  Measurement = "PhysicalDisk"
+                  ObjectName = "PhysicalDisk"
+                  WarnOnMissing = true
+
+                [[inputs.win_perf_counters.object]]
+                  Counters = ["% User Time", "% Idle Time", "% Interrupt Time"]
+                  Instances = ["_Total"]
+                  Measurement = "Processor"
+                  ObjectName = "Processor"
+                  WarnOnMissing = true
+                [inputs.win_perf_counters.tags]
+                  metricPath = "metrics"
+
+
+            [outputs]
+
+              [[outputs.cloudwatch]]
+                force_flush_interval = "60s"
+                namespace = "CWAgent"
+                region = "us-east-1"
+                tagexclude = ["host", "metricPath"]
+                [outputs.cloudwatch.tagpass]
+                  metricPath = ["metrics"]
+
+            [processors]
+
+              [[processors.ec2tagger]]
+                ec2_instance_tag_keys = ["aws:autoscaling:groupName"]
+                ec2_metadata_tags = ["ImageId", "InstanceId", "InstanceType"]
+                refresh_interval_seconds = "0s"
+                [processors.ec2tagger.tagpass]
+                  metricPath = ["metrics"]
+
+        dest: "C:\\ProgramData\\Amazon\\AmazonCloudWatchAgent\\amazon-cloudwatch-agent.toml"
 
     # Print debug information
     - name: Print debug information
