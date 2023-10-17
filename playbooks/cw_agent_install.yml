@@ -1,0 +1,55 @@
+---
+- name: Install AWS Cloudwatch Agent on Windows
+  hosts: windows
+  tasks:
+    # Check if AWS Cloudwatch Agent service is installed
+    - name: check-cloudwatch | Check if Cloudwatch Agent service is installed
+      win_service:
+        name: "AmazonCloudWatchAgent"
+      register: CloudWatchServiceResult
+
+    # Install the Cloudwatch Agent if it isn't already installed
+    - name: install-cloudwatch
+      win_package:
+        path: https://amazoncloudwatch-agent.s3.amazonaws.com/windows/amd64/latest/amazon-cloudwatch-agent.msi
+        creates_service: "AmazonCloudWatchAgent"
+        state: present
+      register: CloudWatchInstall
+
+    # Reboot if required after the installation
+    - name: install-cloudwatch | Reboot if required
+      win_reboot:
+      when: CloudWatchInstall.reboot_required
+
+    # Re-check the Cloudwatch Agent service after installation
+    - name: check-cloudwatch | Re-check Cloudwatch Agent service
+      win_service:
+        name: "AmazonCloudWatchAgent"
+      register: CloudWatchServiceResultAfterInstall
+
+    # If AWS Cloudwatch Agent service is not installed after the installation task, fail the playbook
+    - name: check-cloudwatch | If Cloudwatch Agent service is not installed, fail playbook
+      fail:
+        msg: "AWS Cloudwatch Agent did not install, do not continue"
+      when:
+        - CloudWatchServiceResultAfterInstall['exists'] == false
+
+    # # If you need to provide a configuration json, you would typically copy it over to the target system
+    # # and then run the necessary command to load that configuration. Here's an example assuming you
+    # # have a configuration file named 'cloudwatch-config.json' on your Ansible controller:
+    # - name: Copy CloudWatch configuration file
+    #   win_copy:
+    #     src: cloudwatch-config.json
+    #     dest: C:\path\to\dest\on\windows\system\cloudwatch-config.json
+
+    # # Then you would load that configuration using whatever command AWS CloudWatch Agent expects:
+    # # For example:
+    # - name: Load CloudWatch configuration
+    #   win_shell: |
+    #     "C:\path\to\cloudwatch\agent\binary" -load-config "C:\path\to\dest\on\windows\system\cloudwatch-config.json"
+
+    # Print debug information
+    - name: Print debug information
+      debug:
+        msg: "Windows | Install Cloudwatch Agent | System {{ inventory_hostname }} has OS {{ansible_distribution}}"
+      tags: debug_info
