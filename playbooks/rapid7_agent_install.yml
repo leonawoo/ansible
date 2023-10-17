@@ -23,11 +23,6 @@
         - Rapid7ServiceResult['exists'] == false
       register: Rapid7Install
 
-    # Reboot if required after the installation
-    - name: install-rapid7 | Reboot if required
-      win_reboot:
-      when: Rapid7Install.reboot_required
-
     # Re-check the Rapid7 "ir_agent" service after installation
     - name: check-rapid7 | Re-check ir_agent service
       win_service:
