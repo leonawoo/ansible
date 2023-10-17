@@ -1,0 +1,48 @@
+---
+- name: Install Rapid7 Agent on Windows
+  hosts: windows
+  tasks:
+    # Check if Rapid7 "ir_agent" service is installed
+    - name: check-rapid7 | Check if ir_agent service is installed
+      win_service:
+        name: "ir_agent"
+      register: Rapid7ServiceResult
+
+    # Download the setup.exe from the provided URL
+    - name: download-rapid7 | Download the Rapid7 setup file
+      win_get_url:
+        url: https://alks-s3-security-training-bucket.s3.amazonaws.com/windows/rapid7/agentInstaller-x86_64.msi
+        dest: "C:\\tmp\\agentInstaller-x86_64.msi"
+      when:
+        - Rapid7ServiceResult['exists'] == false
+
+    # Install the Rapid7 Agent if it isn't already installed
+    - name: install-rapid7 | Install the Rapid7 Agent
+      win_command: msiexec /i C:\\tmp\\agentInstaller-x86.msi /l*v insight_agent_install_log.log CUSTOMTOKEN="{{ token }}"
+      when:
+        - Rapid7ServiceResult['exists'] == false
+      register: Rapid7Install
+
+    # Reboot if required after the installation
+    - name: install-rapid7 | Reboot if required
+      win_reboot:
+      when: Rapid7Install.reboot_required
+
+    # Re-check the Rapid7 "ir_agent" service after installation
+    - name: check-rapid7 | Re-check ir_agent service
+      win_service:
+        name: "ir_agent"
+      register: Rapid7ServiceResultAfterInstall
+
+    # If Rapid7 "ir_agent" service is not installed after the installation task, fail the playbook
+    - name: check-rapid7 | If ir_agent service is not installed, fail playbook
+      fail:
+        msg: "Rapid7 Agent did not install, do not continue"
+      when:
+        - Rapid7ServiceResultAfterInstall['exists'] == false
+
+    # Print debug information
+    - name: Print debug information
+      debug:
+        msg: "Windows | Install Rapid7 Agent | System {{ inventory_hostname }} has OS {{ansible_distribution}}"
+      tags: debug_info
