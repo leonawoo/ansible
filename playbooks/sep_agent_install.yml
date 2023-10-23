@@ -2,10 +2,15 @@
 - name: Install Symantec Endpoint Protection on Windows
   hosts: windows
   tasks:
-    # Check if Symantec Endpoint Protection service is installed
+    # Check if Symantec Endpoint Protection service is installed using PowerShell
     - name: check-symantec | Check if SepMasterService is installed
-      win_service:
-        name: "SepMasterService"
+      win_shell: |
+        $service = Get-Service -Name "SepMasterService" -ErrorAction SilentlyContinue
+        if ($service) {
+            return $true
+        } else {
+            return $false
+        }
       register: SymantecServiceResult
 
     # Download the setup.exe from the provided URL for Symantec
@@ -13,25 +18,29 @@
       win_get_url:
         url: https://alks-s3-security-training-bucket.s3.amazonaws.com/windows/sep/setup.exe
         dest: "C:\\tmp\\setup.exe"
-      when: SymantecServiceResult['exists'] == false
+      when: not SymantecServiceResult.stdout | bool
 
     # Install the Symantec Endpoint Protection if it isn't already installed
     - name: install-symantec | Install the Symantec Endpoint Protection
       win_command: "C:\\tmp\\setup.exe /s /v\"/QN /L*V C:\\tmp\\sep_log.txt\""
-      when: SymantecServiceResult['exists'] == false
+      when: not SymantecServiceResult.stdout | bool
 
-    # Re-check the Symantec "SepMasterService" service after installation
+    # Re-check the Symantec "SepMasterService" service after installation using PowerShell
     - name: check-symantec | Re-check SepMasterService
-      win_service:
-        name: "SepMasterService"
+      win_shell: |
+        $service = Get-Service -Name "SepMasterService" -ErrorAction SilentlyContinue
+        if ($service) {
+            return $true
+        } else {
+            return $false
+        }
       register: SymantecServiceResultAfterInstall
 
     # If Symantec "SepMasterService" service is not installed after the installation task, fail the playbook
     - name: check-symantec | If SepMasterService is not installed, fail playbook
       fail:
         msg: "Symantec Endpoint Protection did not install, do not continue"
-      when:
-        - SymantecServiceResultAfterInstall['exists'] == false
+      when: not SymantecServiceResultAfterInstall.stdout | bool
 
     # Print debug information
     - name: Print debug information
