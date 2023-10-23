@@ -1,0 +1,40 @@
+---
+- name: Install Symantec Endpoint Protection on Windows
+  hosts: windows
+  tasks:
+    # Check if Symantec Endpoint Protection service is installed
+    - name: check-symantec | Check if SepMasterService is installed
+      win_service:
+        name: "SepMasterService"
+      register: SymantecServiceResult
+
+    # Download the setup.exe from the provided URL for Symantec
+    - name: download-symantec | Download the Symantec setup file
+      win_get_url:
+        url: https://alks-s3-security-training-bucket.s3.amazonaws.com/windows/sep/setup.exe
+        dest: "C:\\tmp\\setup.exe"
+      when: SymantecServiceResult['exists'] == false
+
+    # Install the Symantec Endpoint Protection if it isn't already installed
+    - name: install-symantec | Install the Symantec Endpoint Protection
+      win_command: "C:\\tmp\\setup.exe /s /v\"/QN /L*V C:\\tmp\\sep_log.txt\""
+      when: SymantecServiceResult['exists'] == false
+
+    # Re-check the Symantec "SepMasterService" service after installation
+    - name: check-symantec | Re-check SepMasterService
+      win_service:
+        name: "SepMasterService"
+      register: SymantecServiceResultAfterInstall
+
+    # If Symantec "SepMasterService" service is not installed after the installation task, fail the playbook
+    - name: check-symantec | If SepMasterService is not installed, fail playbook
+      fail:
+        msg: "Symantec Endpoint Protection did not install, do not continue"
+      when:
+        - SymantecServiceResultAfterInstall['exists'] == false
+
+    # Print debug information
+    - name: Print debug information
+      debug:
+        msg: "Windows | Install Symantec Endpoint Protection | System {{ inventory_hostname }} has OS {{ansible_distribution}}"
+      tags: debug_info
