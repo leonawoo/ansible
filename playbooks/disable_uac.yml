@@ -1,0 +1,15 @@
+---
+- name: Disable UAC on Windows
+  hosts: windows
+  tasks:
+    - name: Disable UAC via Registry
+      win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+        name: EnableLUA
+        data: 0
+        type: dword
+      notify: Restart Computer
+
+  handlers:
+    - name: Restart Computer
+      win_reboot:
