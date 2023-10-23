@@ -2,7 +2,7 @@
 - name: Install Symantec Endpoint Protection on Windows
   hosts: windows
   tasks:
-    # Check if Symantec Endpoint Protection service is installed using PowerShell
+    # Check if Symantec Endpoint Protection service is installed
     - name: check-symantec | Check if SepMasterService is installed
       win_shell: |
         $service = Get-Service -Name "SepMasterService" -ErrorAction SilentlyContinue
@@ -18,14 +18,14 @@
       win_get_url:
         url: https://alks-s3-security-training-bucket.s3.amazonaws.com/windows/sep/setup.exe
         dest: "C:\\tmp\\setup.exe"
-      when: not SymantecServiceResult.stdout | bool
+      when: SymantecServiceResult.stdout | trim | lower != "true"
 
     # Install the Symantec Endpoint Protection if it isn't already installed
     - name: install-symantec | Install the Symantec Endpoint Protection
       win_command: "C:\\tmp\\setup.exe /s /v\"/QN /L*V C:\\tmp\\sep_log.txt\""
-      when: not SymantecServiceResult.stdout | bool
+      when: SymantecServiceResult.stdout | trim | lower != "true"
 
-    # Re-check the Symantec "SepMasterService" service after installation using PowerShell
+    # Re-check the Symantec "SepMasterService" service after installation
     - name: check-symantec | Re-check SepMasterService
       win_shell: |
         $service = Get-Service -Name "SepMasterService" -ErrorAction SilentlyContinue
@@ -36,11 +36,16 @@
         }
       register: SymantecServiceResultAfterInstall
 
+    # Debugging the output of the service check
+    - name: Debug - Show output of check-symantec
+      debug:
+        var: SymantecServiceResultAfterInstall.stdout
+
     # If Symantec "SepMasterService" service is not installed after the installation task, fail the playbook
     - name: check-symantec | If SepMasterService is not installed, fail playbook
       fail:
         msg: "Symantec Endpoint Protection did not install, do not continue"
-      when: not SymantecServiceResultAfterInstall.stdout | bool
+      when: SymantecServiceResultAfterInstall.stdout | trim | lower != "true"
 
     # Print debug information
     - name: Print debug information
