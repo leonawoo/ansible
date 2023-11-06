@@ -7,11 +7,14 @@
       win_shell: |
         $service = Get-Service -Name "SepMasterService" -ErrorAction SilentlyContinue
         if ($service) {
-            return $true
+            Write-Output "true"
+            exit 0
         } else {
-            return $false
+            Write-Output "false"
+            exit 0
         }
       register: SymantecServiceResult
+      failed_when: SymantecServiceResult.rc != 0
 
     # Download the setup.exe from the provided URL for Symantec
     - name: download-symantec | Download the Symantec setup file
