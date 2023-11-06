@@ -22,7 +22,6 @@
 - name: Join hosts to the domain
   hosts: windows
   gather_facts: false
-
   tasks:
     - name: Join domain
       ansible.windows.win_domain_membership:
@@ -36,7 +35,7 @@
       loop_control:
         loop_var: item
       register: domain_state
-      when: inventory_hostname == item.value.ansible_host
+      when: inventory_hostname == item.key
 
     - name: Reboot if required
       ansible.windows.win_reboot:
