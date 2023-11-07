@@ -27,7 +27,7 @@
       win_ping:
       register: ping_result
       until: ping_result is success
-      retries: 5
-      delay: 10
+      retries: 20
+      delay: 30
       when: ping_result is unreachable
       # This task will only run if there were unreachable hosts and will attempt to ping them again
