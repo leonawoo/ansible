@@ -1,0 +1,8 @@
+---
+- name: Retry pinging Windows host
+  win_ping:
+    delegate_to: "{{ host_to_ping }}"
+  register: ping_result
+  until: ping_result is success
+  retries: 20
+  delay: 30
