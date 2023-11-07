@@ -1,12 +1,7 @@
 ---
-- name: Check connectivity to Windows hosts via SSH
-  hosts: windows
-  gather_facts: no
----
 - name: Check connectivity to Windows hosts
   hosts: windows
   gather_facts: no
-
   tasks:
     - block:
         - name: Ping Windows hosts to check connectivity
