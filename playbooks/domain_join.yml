@@ -1,28 +1,13 @@
-# host should be a member of domain ansible.vagrant; module will ensure the hostname is mydomainclient
-# and will use the passed credentials to join domain if necessary.
-# Ansible connection should use local credentials if possible.
-# If a reboot is required, the second task will trigger one and wait until the host is available.
-# ---
-# - hosts: windows
-#   gather_facts: false
-#   tasks:
-#     - ansible.windows.win_domain_membership:
-#         dns_domain_name: "{{ domain }}"
-#         hostname: "{{ hostname }}"
-#         domain_admin_user: ["{{ domain_admin }}"]
-#         domain_admin_password: "{{ domain_password }}"
-#         domain_ou_path: "{{ ou_path }}"
-#         state: domain
-#       register: domain_state
-
-#     - ansible.windows.win_reboot:
-#       when: domain_state.reboot_required
-
 ---
-- name: Join hosts to the domain
+- name: Join hosts to the domain safely
   hosts: windows
   gather_facts: false
   tasks:
+    - name: Wait for SSH to become available
+      wait_for_connection:
+        delay: 10
+        timeout: 600 # Waits up to 10 minutes for SSH to become available.
+
     - name: Join domain
       ansible.windows.win_domain_membership:
         dns_domain_name: "{{ domain }}"
@@ -39,4 +24,6 @@
 
     - name: Reboot if required
       ansible.windows.win_reboot:
-      when: domain_state.results | selectattr('reboot_required', 'defined') | map(attribute='reboot_required') | list | unique == [true]
+      when: domain_state.results is defined and
+        domain_state.results | selectattr('reboot_required', 'defined') |
+        map(attribute='reboot_required') | list | unique == [true]
