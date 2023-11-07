@@ -2,10 +2,28 @@
 - name: Check connectivity to Windows hosts via SSH
   hosts: windows
   gather_facts: no
+---
+- name: Check connectivity to Windows hosts
+  hosts: windows
+  gather_facts: no
+
   tasks:
-    - name: Ping Windows hosts to check connectivity via SSH
-      win_ping:
-      register: ping_result
-      until: ping_result is success
-      retries: 10 # Number of retries
-      delay: 30 # Delay in seconds between retries
+    - block:
+        - name: Ping Windows hosts to check connectivity
+          win_ping:
+          register: ping_result
+          until: ping_result is success
+          retries: 5
+          delay: 10
+      rescue:
+        - name: Wait before retry
+          wait_for_connection:
+            delay: 60
+            timeout: 300
+          when: ping_result is not success
+        - name: Retry pinging Windows hosts
+          win_ping:
+          register: ping_result
+          until: ping_result is success
+          retries: 5
+          delay: 10
