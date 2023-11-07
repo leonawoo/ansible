@@ -31,7 +31,7 @@
         domain_admin_password: "{{ domain_password }}"
         domain_ou_path: "{{ ou_path }}"
         state: domain
-      loop: "{{ lookup('dict', hosts) }}"
+      loop: "{{ query('dict', hosts) }}"
       loop_control:
         loop_var: item
       register: domain_state
