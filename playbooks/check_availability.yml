@@ -1,24 +1,33 @@
 ---
-- name: Check connectivity to Windows hosts
+- name: Ensure Windows hosts are reachable
   hosts: windows
   gather_facts: no
   tasks:
-    - block:
-        - name: Ping Windows hosts to check connectivity
-          win_ping:
-          register: ping_result
-          ignore_unreachable: yes
+    - name: Ping Windows hosts to check connectivity
+      win_ping:
+      register: ping_result
+      ignore_unreachable: yes
+      until: ping_result is success
+      retries: 5
+      delay: 10
+      # The above block will retry the win_ping module 5 times with a 10-second delay between retries
 
-      rescue:
-        - name: Wait before retry
-          wait_for_connection:
-            delay: 60
-            timeout: 300
-          when: ping_result is undefined or ping_result.failed
+    - name: Wait before retrying unreachable hosts
+      pause:
+        seconds: 60
+      when: ping_result is unreachable
+      # This task will pause for 60 seconds if any of the hosts are unreachable
 
-        - name: Retry pinging Windows hosts
-          win_ping:
-          register: ping_result
-          until: ping_result is success
-          retries: 5
-          delay: 10
+    - name: Clear any host errors
+      meta: clear_host_errors
+      when: ping_result is unreachable
+      # This task will clear any errors allowing the playbook to attempt another pass at pinging unreachable hosts
+
+    - name: Try pinging again
+      win_ping:
+      register: ping_result
+      until: ping_result is success
+      retries: 5
+      delay: 10
+      when: ping_result is unreachable
+      # This task will only run if there were unreachable hosts and will attempt to ping them again
