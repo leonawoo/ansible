@@ -5,4 +5,4 @@
 
   tasks:
     - name: Ping Windows hosts to check connectivity via SSH
-      ping:
+      win_ping:
