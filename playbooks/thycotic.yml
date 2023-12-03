@@ -1,14 +1,20 @@
 - hosts: localhost
   vars:
-      secret_password: >-
+      secret: >-
         {{
-            ((lookup(
+            lookup(
                 'community.general.tss',
                 102,
                 base_url={{ base_url }},
-                token={{ token }},
-            )  | from_json).get('items') | items2dict(key_name='slug', value_name='itemValue'))['password']
+                username={{ username }},
+                password={{ password }},
+            )
         }}
   tasks:
       - ansible.builtin.debug:
-          msg: the password is {{ secret_password }}
+          msg: >
+            the password is {{
+              (secret['items']
+                | items2dict(key_name='slug',
+                             value_name='itemValue'))['password']
+            }}
