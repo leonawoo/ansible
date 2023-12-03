@@ -1,4 +1,4 @@
-- hosts: localhosts
+- hosts: localhost
   vars:
       secret_password: >-
         {{
