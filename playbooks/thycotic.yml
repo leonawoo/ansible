@@ -1,4 +1,4 @@
-- hosts: windows
+- hosts: localhosts
   vars:
       secret_password: >-
         {{
