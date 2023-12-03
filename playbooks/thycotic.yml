@@ -5,9 +5,9 @@
             lookup(
                 'community.general.tss',
                 2,
-                base_url={{ base_url }},
-                username={{ username }},
-                password={{ password }},
+                base_url="{{ base_url }}",
+                username="{{ username }}",
+                password="{{ password }}",
             )
         }}
   tasks:
