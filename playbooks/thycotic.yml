@@ -1,6 +1,8 @@
 - hosts: localhost
+  collections:
+    - community.general
   vars:
-    ansible_python_interpreter: /bin/python3
+    ansible_python_interpreter: /usr/bin/python3
     secret: >-
       {{
           lookup(
@@ -8,15 +10,10 @@
               2,
               base_url="{{ base_url }}",
               username="{{ username }}",
-              password="{{ password }}",
+              password="{{ password }}"
           )
       }}
   tasks:
     - name: Retrieve secret from Thycotic Secret Server
       ansible.builtin.debug:
-        msg: >
-          the password is {{
-            (secret['items']
-              | items2dict(key_name='slug',
-                           value_name='itemValue'))['password']
-          }}
+        msg: "The password is {{ secret['items'] | items2dict(key_name='slug', value_name='itemValue')['password'] }}"
