@@ -1,36 +1,36 @@
 - hosts: localhost
   vars:
     ansible_python_interpreter: /usr/bin/python3
-      secret: >-
-        {{
-            lookup(
-                'community.general.tss',
-                2,
-                base_url="{{ base_url }}",
-                username="{{ username }}",
-                password="{{ password }}",
-            )
-        }}
+    secret: >-
+      {{
+          lookup(
+              'community.general.tss',
+              2,
+              base_url="{{ base_url }}",
+              username="{{ username }}",
+              password="{{ password }}",
+          )
+      }}
   tasks:
-      - name: Install python-tss-sdk
-        ansible.builtin.pip:
-          name: python-tss-sdk
-          state: present
-          extra_args: --user
+    - name: Install python-tss-sdk
+      ansible.builtin.pip:
+        name: python-tss-sdk
+        state: present
+        extra_args: --user
 
-      - name: Show Ansible Python interpreter
-        ansible.builtin.debug:
-          var: ansible_python_interpreter
+    - name: Show Ansible Python interpreter
+      ansible.builtin.debug:
+        var: ansible_python_interpreter
 
-      - name: Show Playbook Python interpreter
-        ansible.builtin.debug:
-          var: ansible_playbook_python
+    - name: Show Playbook Python interpreter
+      ansible.builtin.debug:
+        var: ansible_playbook_python
 
-      - name: Retrieve secret from Thycotic Secret Server
-        ansible.builtin.debug:
-          msg: >
-            the password is {{
-              (secret['items']
-                | items2dict(key_name='slug',
-                             value_name='itemValue'))['password']
-            }}
+    - name: Retrieve secret from Thycotic Secret Server
+      ansible.builtin.debug:
+        msg: >
+          the password is {{
+            (secret['items']
+              | items2dict(key_name='slug',
+                           value_name='itemValue'))['password']
+          }}
