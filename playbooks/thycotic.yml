@@ -11,11 +11,6 @@
               password="{{ password }}",
           )
       }}
-  tasks:
-    - name: Install python-tss-sdk
-      ansible.builtin.pip:
-        name: python-tss-sdk
-        state: present
 
     - name: Retrieve secret from Thycotic Secret Server
       ansible.builtin.debug:
