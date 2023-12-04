@@ -1,5 +1,6 @@
 - hosts: localhost
   vars:
+    ansible_python_interpreter: /usr/bin/python3
       secret: >-
         {{
             lookup(
@@ -15,6 +16,15 @@
         ansible.builtin.pip:
           name: python-tss-sdk
           state: present
+          extra_args: --user
+
+      - name: Show Ansible Python interpreter
+        ansible.builtin.debug:
+          var: ansible_python_interpreter
+
+      - name: Show Playbook Python interpreter
+        ansible.builtin.debug:
+          var: ansible_playbook_python
 
       - name: Retrieve secret from Thycotic Secret Server
         ansible.builtin.debug:
