@@ -16,4 +16,5 @@
   tasks:
     - name: Retrieve secret from Thycotic Secret Server
       ansible.builtin.debug:
-        msg: "The password is {{ (secret['items'] | items2dict(key_name='slug', value_name='itemValue')).password }}"
+        msg: "The password is {{ (secret['items'] | items2dict(key_name='slug', value_name='itemValue'))['password'] }}"
+
