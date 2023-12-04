@@ -11,7 +11,7 @@
               password="{{ password }}",
           )
       }}
-
+  tasks:
     - name: Retrieve secret from Thycotic Secret Server
       ansible.builtin.debug:
         msg: >
