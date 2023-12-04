@@ -1,5 +1,4 @@
 - hosts: localhost
-  become: yes
   collections:
     - community.general
   vars:
