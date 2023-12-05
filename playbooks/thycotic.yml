@@ -1,5 +1,5 @@
 - hosts: localhost
-  gather_facts: True
+  connection: local
   collections:
     - community.general
   vars:
